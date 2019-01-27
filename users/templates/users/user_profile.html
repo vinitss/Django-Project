@@ -1,0 +1,47 @@
+{% extends "blog/baseprofile.html" %}
+{% load crispy_forms_tags %}
+{% block content %}
+
+
+
+          <h1> {{user_p.profile.type}} </h1>
+          <div class="card border-primary h-100">
+            <div style="text-align:center;">
+            <div class=" ml-2 mt-3" >
+              <img class="rounded-circle account-img" src="{{ user_p.profile.image.url }}">
+            </div>
+              <div class="media-body">
+                <h4 >Username : {{ user_p.username }}</h4>
+                <h4 >Email : {{ user_p.email }}<br>
+                {% if user_p.profile.type == 'Student' %}
+                Name : {{ user_p.student_profile.first_name }} {{ user_p.student_profile.last_name }}<br>
+                {{user_p.student_profile.branch}} Engineering
+                {%  elif user_p.profile.type == 'Faculty' %}
+                Name : {{ user_p.faculty_profile.first_name }} {{ user_p.faculty_profile.last_name }}
+                {% else %}
+                Name : {{ user_p.community_profile.name }}<br>
+                Admin : {{user_p.community_profile.admin_username}}
+                {% endif %}
+              </h4>
+              <br>
+              </div>
+              {% if user_p.username == user.username %}
+              <div class="border-top pt-3">
+                  <div class="text-muted">
+                       <a class="ml-2" href="{% url 'edit_profile' %}">Edit Profile</a>
+
+                  </div>
+              </div>
+
+              {% endif  %}
+              <div class="border-top pt-3">
+                  <div class="text-muted">
+                       <a class="ml-2" href="{% url 'user-posts' user_p.username %}">Blogs</a>
+                  </div>
+              </div>
+
+            </div>
+            </div>
+
+
+{% endblock content %}

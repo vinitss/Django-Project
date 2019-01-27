@@ -1,0 +1,235 @@
+{% extends "blog/base.html" %}
+{% load static %}
+{% block content %}
+
+
+    <!-- Copy pasted from  https://www.w3schools.com/howto/tryit.asp?filename=tryhow_css_js_dropdown_filter -->
+<style>
+    .dropbtn {
+      background-color: black;
+      color: white;
+      padding: 16px;
+      font-size: 16px;
+      border: none;
+      cursor: pointer;
+    }
+
+    .dropbtn:hover, .dropbtn:focus {
+      background-color: black;
+    }
+
+    #myInput {
+      border-box: box-sizing;
+
+      background-position: 14px 12px;
+      background-repeat: no-repeat;
+      font-size: 16px;
+      padding: 14px 20px 12px 45px;
+      border: none;
+      border-bottom: 1px solid #ddd;
+    }
+
+    #myInput:focus {outline: 3px solid orange;}
+
+    .dropdown {
+      position: relative;
+      display: inline-block;
+    }
+
+    .dropdown-content {
+      display: none;
+      position: absolute;
+      background-color: #f6f6f6;
+      min-width: 230px;
+      overflow: auto;
+      border: 1px solid #ddd;
+      z-index: 1;
+    }
+
+    .dropdown-content a {
+      color: black;
+      padding: 12px 16px;
+      text-decoration: none;
+      display: block;
+    }
+
+    .dropdown a:hover {background-color: orange;}
+
+    .show {display: block;}
+</style>
+    <div class="dropdown float-left">
+    <button onclick="myFunction()" class="dropbtn btn btn-info">Filter</button>
+    <div id="myDropdown" class="dropdown-content">
+      <input type="text" placeholder="Search.." id="myInput" onkeyup="filterFunction()">
+      <a href="{% url 'year-posts' view.kwargs.branch 'First' %}">First Year</a>
+      <a href="{% url 'year-posts' view.kwargs.branch 'Second' %}">Second Year</a>
+      <a href="{% url 'year-posts' view.kwargs.branch 'Third' %}">Third Year</a>
+      <a href="{% url 'year-posts' view.kwargs.branch 'Fourth' %}">Fourth Year</a>
+
+
+    </div>
+</div>
+<script src="https://code.jquery.com/jquery-3.3.1.js"
+			  integrity="sha256-2Kok7MbOyxpgUVvAk/HJ2jigOSYS2auK4Pfzbm7uH60="
+			  crossorigin="anonymous"></script>
+
+<script>
+    /* When the user clicks on the button,
+    toggle between hiding and showing the dropdown content */
+    function myFunction() {
+      document.getElementById("myDropdown").classList.toggle("show");
+    }
+
+    function filterFunction() {
+      var input, filter, ul, li, a, i;
+      input = document.getElementById("myInput");
+      filter = input.value.toUpperCase();
+      div = document.getElementById("myDropdown");
+      a = div.getElementsByTagName("a");
+      for (i = 0; i < a.length; i++) {
+        txtValue = a[i].textContent || a[i].innerText;
+        if (txtValue.toUpperCase().indexOf(filter) > -1) {
+          a[i].style.display = "";
+        } else {
+          a[i].style.display = "none";
+        }
+      }
+    }
+    $(document).ready(function(){
+      console.log("ready");
+      var pkey;
+
+        $('.like').click(function(){
+          var p1=$(this);
+          console.log(p1.data().name + "like");
+          $.ajax({
+
+                   type: "POST",
+                   url: "{% url 'like' %}",
+                   data: {'pkey': p1.data().name , 'liked':'Yes' ,'type':'Post', 'csrfmiddlewaretoken': '{{ csrf_token }}'},
+                   dataType: "json",
+
+                   success: function(response) {
+                     var val = document.getElementsByClassName('Total');
+                     var idx = p1.data().variable -1 ;
+                     val[idx].innerHTML= response.likes_count;
+                          //alert(response.message + ' , likes count is now ' + response.likes_count);
+                          bootbox.alert({
+                            message: response.message,
+                            backdrop: true
+                        });
+                    },
+                    error: function(rs, e) {
+                           alert(rs.responseText);
+                    }
+              });
+        })
+
+        $('.dislike').click(function(){
+          var p1=$(this);
+          console.log(p1);
+          $.ajax({
+
+                   type: "POST",
+                   url: "{% url 'like' %}",
+                   data: {'pkey': p1.data().name , 'liked':'No' ,'type':'Post', 'csrfmiddlewaretoken': '{{ csrf_token }}'},
+                   dataType: "json",
+                   success: function(response) {
+                     var val = document.getElementsByClassName('Total');
+                     var idx = p1.data().variable -1 ;
+                     val[idx].innerHTML= response.likes_count;
+                     bootbox.alert({
+                       message: response.message,
+                       backdrop: true
+                   });
+                          //alert(response.message + ' , likes count is now ' + response.likes_count);
+                    },
+                    error: function(rs, e) {
+                           alert(rs.responseText);
+                    }
+              });
+        })
+
+      });
+
+
+</script>
+
+  <br>
+  <br>
+  <br>
+
+
+
+
+    <h1 class="mb-3">Posts of {{ view.kwargs.branch }} Branch ({{ page_obj.paginator.count }})</h1>
+
+    {% for post in posts %}
+
+        <article class="media content-section">
+          <img class="rounded-circle article-img" src="{{ post.author.profile.image.url }}">
+          <div class="media-body">
+            <div class="article-metadata">
+              <a class="mr-2" href="{% url 'user_profile' post.author %}">{{ post.author }}</a>
+              <small class="text-muted">{{ post.date_posted|date:"F d, Y" }}</small>
+
+            </div>
+            <h3><a class="article-title" href="{% url 'post-detail' post.id %}">{{ post.title }}</a></h3>
+
+          </div>
+        </article>
+
+        <div class=" mb-4">
+          <div class="float-left">
+            {% if user.is_authenticated %}
+         <input type="image" src="/static/blog/upvote.png" width="48" height="48" data-name="{{post.pk}}" data-other="Post" data-variable="{{forloop.counter}}" class="like" ></input>
+           {% else %}
+           <img src="/static/blog/upvote.png" width="48" height="48" />
+           {% endif %}
+
+
+           <h3 class="Total"> {{post.total_likes}} </h3>
+
+           {% if user.is_authenticated %}
+
+         <input type="image" src="/static/blog/downvote.png" width="48" height="48" data-name="{{post.pk}}" data-other="Post" data-variable="{{forloop.counter}}" class="dislike" ></input>
+         {% else %}
+         <img src="/static/blog/downvote.png" width="48" height="48" />
+           {% endif %}
+         </div>
+        <div class="card border-primary h-100">
+             <div class="card-body d-flex flex-column align-items-start">
+
+                 <p class="card-text">{{ post.content | safe}}</p>
+
+             </div>
+
+         </div>
+
+        </div>
+        <br>
+
+    {% endfor %}
+
+    {% if is_paginated %}
+
+      {% if page_obj.has_previous %}
+        <a class="btn btn-outline-info mb-4" href="?page=1">First</a>
+        <a class="btn btn-outline-info mb-4" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+      {% endif %}
+
+      {% for num in page_obj.paginator.page_range %}
+        {% if page_obj.number == num %}
+          <a class="btn btn-info mb-4" href="?page={{ num }}">{{ num }}</a>
+        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+          <a class="btn btn-outline-info mb-4" href="?page={{ num }}">{{ num }}</a>
+        {% endif %}
+      {% endfor %}
+
+      {% if page_obj.has_next %}
+        <a class="btn btn-outline-info mb-4" href="?page={{ page_obj.next_page_number }}">Next</a>
+        <a class="btn btn-outline-info mb-4" href="?page={{ page_obj.paginator.num_pages }}">Last</a>
+      {% endif %}
+
+    {% endif %}
+{% endblock content %}
